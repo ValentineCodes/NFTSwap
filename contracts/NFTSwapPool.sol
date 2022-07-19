@@ -3,9 +3,11 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import "./interfaces/INFTSwapPool.sol";
+
+import "./libraries/PriceConverter.sol";
 
 error NFTSwapPool__ZeroAddress();
 
@@ -27,14 +29,22 @@ error NFTSwapPool__InvalidTo();
 
 error NFTSwapPool__PriceOutOfRange();
 
-error NFTSwapPool__InvalidTradeClaimer();
+error NFTSwapPool__InvalidTokenReceiver();
 
-abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
+error NFTSwapPool__InsufficientFee();
+
+contract NFTSwapPool is INFTSwapPool {
+    using PriceConverter for uint256;
+
+    uint256 private constant MINIMUM_FEE = 1 * 10**18; // in USD
+
     address private immutable i_factory;
 
     address private immutable i_nft0;
 
     address private immutable i_nft1;
+
+    AggregatorV3Interface private immutable s_priceFeed;
 
     TokenIdPair[] private s_allPairs;
 
@@ -43,14 +53,16 @@ abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
     constructor(
         address factory,
         address nft0,
-        address nft1
+        address nft1,
+        address priceFeed
     ) {
         i_factory = factory;
         i_nft0 = nft0;
         i_nft1 = nft1;
+        s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
-    function getNFTPair() public view override returns (address, address) {
+    function getNFTPair() external view override returns (address, address) {
         return (i_nft0, i_nft1);
     }
 
@@ -64,7 +76,7 @@ abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
     }
 
     function getExchange(uint256 tokenId0, uint256 tokenId1)
-        public
+        external
         view
         override
         returns (Exchange memory)
@@ -101,102 +113,88 @@ abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
     }
 
     function _createExchange(
-        address owner,
         address trader,
         uint256 tokenId0,
-        uint256 tokenId1,
-        uint256 minPrice,
-        uint256 maxPrice
+        uint256 tokenId1
     ) private {
-        Exchange memory exchange = getExchange(tokenId0, tokenId1);
-        (address nft0, address nft1) = getNFTPair();
+        Exchange memory exchange = s_exchange[tokenId0][tokenId1];
+        (address nft0, address nft1) = (i_nft0, i_nft1);
 
         if (exchange.owner != address(0)) revert NFTSwapPool__ExchangeExists();
-        if (trader == owner || trader == nft0 || trader == nft1)
+        if (trader == msg.sender || trader == nft0 || trader == nft1)
             revert NFTSwapPool__InvalidTrader();
 
-        if (_getOwnerOf(nft0, tokenId0) != owner)
+        if (_getOwnerOf(nft0, tokenId0) != msg.sender)
             revert NFTSwapPool__NotOwner();
-        if (_getOwnerOf(nft1, tokenId1) == owner)
+        if (_getOwnerOf(nft1, tokenId1) == msg.sender)
             revert NFTSwapPool__AlreadyOwnedToken();
 
-        // TO-DO: Approve pool contract to spend token
+        _safeTransferFrom(nft0, msg.sender, address(this), tokenId0);
 
-        _safeTransferFrom(nft0, owner, address(this), tokenId0);
-
-        s_allPairs.push(TokenIdPair(tokenId0, tokenId1, minPrice, maxPrice));
+        s_allPairs.push(TokenIdPair(tokenId0, tokenId1));
         s_exchange[tokenId0][tokenId1] = Exchange(
             msg.sender,
             trader,
             tokenId0,
-            tokenId1,
-            minPrice,
-            maxPrice
+            tokenId1
         );
 
         emit ExchangeCreated(
             nft0,
             nft1,
+            msg.sender,
             trader,
             tokenId0,
-            tokenId1,
-            minPrice,
-            maxPrice
+            tokenId1
         );
     }
 
     // TO-DO: Handle price range
-    function createExchange(
-        uint256 tokenId0,
-        uint256 tokenId1,
-        uint256 minPrice,
-        uint256 maxPrice
-    ) external {
-        _createExchange(
-            msg.sender,
-            address(0),
-            tokenId0,
-            tokenId1,
-            minPrice,
-            maxPrice
-        );
+    function createExchange(uint256 tokenId0, uint256 tokenId1)
+        external
+        payable
+        override
+    {
+        if (msg.value.toUSD(s_priceFeed) < 1)
+            revert NFTSwapPool__InsufficientFee();
+        _createExchange(address(0), tokenId0, tokenId1);
     }
 
     function createExchangeFor(
         address trader,
         uint256 tokenId0,
-        uint256 tokenId1,
-        uint256 minPrice,
-        uint256 maxPrice
-    ) external {
-        _createExchange(
-            msg.sender,
-            trader,
-            tokenId0,
-            tokenId1,
-            minPrice,
-            maxPrice
-        );
+        uint256 tokenId1
+    ) external payable override {
+        if (trader == address(0)) revert NFTSwapPool__ZeroAddress();
+
+        if (msg.value.toUSD(s_priceFeed) < 1)
+            revert NFTSwapPool__InsufficientFee();
+        _createExchange(trader, tokenId0, tokenId1);
     }
 
-    function trade(uint256 tokenId0, uint256 tokenId1) external override {
-        Exchange memory exchange = getExchange(tokenId0, tokenId1);
-        (address nft0, address nft1) = getNFTPair();
+    function trade(uint256 tokenId0, uint256 tokenId1)
+        external
+        payable
+        override
+    {
+        Exchange memory exchange = s_exchange[tokenId0][tokenId1];
+        (address nft0, address nft1) = (i_nft0, i_nft1);
+
+        if (msg.value.toUSD(s_priceFeed) < 1)
+            revert NFTSwapPool__InsufficientFee();
 
         if (exchange.owner == address(0))
             revert NFTSwapPool__NonexistentExchange();
+
         if (msg.sender == exchange.owner) revert NFTSwapPool__InvalidTrader();
 
         if (_getOwnerOf(nft1, tokenId1) != msg.sender)
             revert NFTSwapPool__NotOwner();
 
-        // TO-DO: Approve pool contract to spend token
-
         if (exchange.trader != address(0) && msg.sender != exchange.trader)
-            revert NFTSwapPool__InvalidTradeClaimer();
+            revert NFTSwapPool__InvalidTokenReceiver();
 
         _safeTransferFrom(nft0, address(this), msg.sender, tokenId0);
-
         _safeTransferFrom(nft1, msg.sender, exchange.owner, tokenId1);
 
         if (
@@ -206,14 +204,60 @@ abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
 
         delete s_exchange[tokenId0][tokenId1];
 
-        emit Trade(
-            nft0,
-            nft1,
-            msg.sender,
-            tokenId0,
-            tokenId1,
-            exchange.minPrice,
-            exchange.maxPrice
+        emit Trade(nft0, nft1, exchange.owner, msg.sender, tokenId0, tokenId1);
+    }
+
+    function updateExchangeOwner(
+        address newOwner,
+        uint256 tokenId0,
+        uint256 tokenId1
+    ) external override {
+        if (newOwner == address(0)) revert NFTSwapPool__ZeroAddress();
+
+        Exchange memory exchange = s_exchange[tokenId0][tokenId1];
+
+        if (msg.sender != exchange.owner) revert NFTSwapPool__NotOwner();
+
+        s_exchange[tokenId0][tokenId1] = Exchange(
+            newOwner,
+            exchange.trader,
+            exchange.tokenId0,
+            exchange.tokenId1
+        );
+
+        emit ExchangeUpdated(
+            i_nft0,
+            i_nft1,
+            newOwner,
+            exchange.trader,
+            exchange.tokenId0,
+            exchange.tokenId1
+        );
+    }
+
+    function updateExchangeTrader(
+        address newTrader,
+        uint256 tokenId0,
+        uint256 tokenId1
+    ) external override {
+        Exchange memory exchange = s_exchange[tokenId0][tokenId1];
+
+        if (msg.sender != exchange.owner) revert NFTSwapPool__NotOwner();
+
+        s_exchange[tokenId0][tokenId1] = Exchange(
+            exchange.owner,
+            newTrader,
+            exchange.tokenId0,
+            exchange.tokenId1
+        );
+
+        emit ExchangeUpdated(
+            i_nft0,
+            i_nft1,
+            exchange.owner,
+            newTrader,
+            exchange.tokenId0,
+            exchange.tokenId1
         );
     }
 
@@ -221,36 +265,35 @@ abstract contract NFTSwapPool is INFTSwapPool, IERC721Receiver {
         uint256 tokenId0,
         uint256 tokenId1,
         address to
-    ) external {
-        Exchange memory exchange = getExchange(tokenId0, tokenId1);
-        (address nft0, address nft1) = getNFTPair();
+    ) external override {
+        Exchange memory exchange = s_exchange[tokenId0][tokenId1];
+        (address nft0, address nft1) = (i_nft0, i_nft1);
 
         if (msg.sender != exchange.owner) revert NFTSwapPool__NotOwner();
-        if (to == nft0 || to == nft1) revert NFTSwapPool__InvalidTo();
+        if (to == address(0) || to == nft0 || to == nft1)
+            revert NFTSwapPool__InvalidTo();
 
-        _safeTransferFrom(nft0, address(this), msg.sender, tokenId0);
+        _safeTransferFrom(nft0, address(this), to, tokenId0);
 
         delete s_exchange[tokenId0][tokenId1];
 
         emit ExchangeCancelled(
             nft0,
             nft1,
+            exchange.owner,
             exchange.trader,
+            to,
             tokenId0,
-            tokenId1,
-            exchange.minPrice,
-            exchange.maxPrice
+            tokenId1
         );
     }
-
-    // function cancelExchange() external {}
 
     function onERC721Received(
         address,
         address,
         uint256,
         bytes calldata
-    ) external override returns (bytes4) {
+    ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

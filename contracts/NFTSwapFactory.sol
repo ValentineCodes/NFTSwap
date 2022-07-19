@@ -3,6 +3,7 @@
 pragma solidity ^0.8.7;
 
 import "./interfaces/INFTSwapFactory.sol";
+import "./interfaces/INFTSwapPool.sol";
 import "./NFTSwapPool.sol";
 import "./NoDelegateCall.sol";
 
@@ -58,9 +59,7 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
         pure
         returns (address nft0, address nft1)
     {
-        (address nft0, address nft1) = nftA < nftB
-            ? (nftA, nftB)
-            : (nftB, nftA);
+        (nft0, nft1) = nftA < nftB ? (nftA, nftB) : (nftB, nftA);
     }
 
     function createPool(address nftA, address nftB)
@@ -73,13 +72,15 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
 
         if (nft0 == address(0)) revert NFTSwapFactory__ZeroAddress();
 
-        if (getPool(nft0, nft1) != address(0))
+        if (s_pool[nft0][nft1] != address(0))
             revert NFTSwapFactory__PoolAlreadyExists();
 
         // deploy pool contract
-        pool = new NFTSwapPool{
-            salt: keccak256(abi.encode(address(this), nft0, nft1))
-        }(address(this), nft0, nft1);
+        pool = address(
+            new NFTSwapPool{
+                salt: keccak256(abi.encode(address(this), nft0, nft1))
+            }(address(this), nft0, nft1)
+        );
 
         s_allPools.push(pool);
         s_pool[nft0][nft1] = pool;
@@ -89,6 +90,8 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
         }
 
         emit PoolCreated(nft0, nft1, pool);
+
+        return pool;
     }
 
     function setFeeReceiver(address feeReceiver)
