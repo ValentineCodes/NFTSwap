@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import "./interfaces/INFTSwapPool.sol";
+import "./interfaces/INFTSwapFactory.sol";
 
 import "./libraries/PriceConverter.sol";
 
@@ -33,17 +34,17 @@ error NFTSwapPool__InvalidTokenReceiver();
 
 error NFTSwapPool__InsufficientFee();
 
+error NFTSwapFactory__FeeTransferFailed();
+
 contract NFTSwapPool is INFTSwapPool {
     using PriceConverter for uint256;
 
     uint256 private constant MINIMUM_FEE = 1 * 10**18; // in USD
 
-    address private immutable i_factory;
-
     address private immutable i_nft0;
-
     address private immutable i_nft1;
 
+    INFTSwapFactory private immutable s_factory;
     AggregatorV3Interface private immutable s_priceFeed;
 
     TokenIdPair[] private s_allPairs;
@@ -56,7 +57,7 @@ contract NFTSwapPool is INFTSwapPool {
         address nft1,
         address priceFeed
     ) {
-        i_factory = factory;
+        s_factory = INFTSwapFactory(factory);
         i_nft0 = nft0;
         i_nft1 = nft1;
         s_priceFeed = AggregatorV3Interface(priceFeed);
@@ -139,6 +140,12 @@ contract NFTSwapPool is INFTSwapPool {
             tokenId1
         );
 
+        (bool success, ) = s_factory.getFeeReceiver().call{value: msg.value}(
+            ""
+        );
+
+        if (!success) revert NFTSwapFactory__FeeTransferFailed();
+
         emit ExchangeCreated(
             nft0,
             nft1,
@@ -157,6 +164,7 @@ contract NFTSwapPool is INFTSwapPool {
     {
         if (msg.value.toUSD(s_priceFeed) < 1)
             revert NFTSwapPool__InsufficientFee();
+
         _createExchange(address(0), tokenId0, tokenId1);
     }
 
@@ -169,6 +177,7 @@ contract NFTSwapPool is INFTSwapPool {
 
         if (msg.value.toUSD(s_priceFeed) < 1)
             revert NFTSwapPool__InsufficientFee();
+
         _createExchange(trader, tokenId0, tokenId1);
     }
 
@@ -201,6 +210,12 @@ contract NFTSwapPool is INFTSwapPool {
             _getOwnerOf(nft0, tokenId0) != msg.sender &&
             _getOwnerOf(nft1, tokenId1) != exchange.owner
         ) revert NFTSwapPool__TransferFromFailed();
+
+        (bool success, ) = s_factory.getFeeReceiver().call{value: msg.value}(
+            ""
+        );
+
+        if (!success) revert NFTSwapFactory__FeeTransferFailed();
 
         delete s_exchange[tokenId0][tokenId1];
 
