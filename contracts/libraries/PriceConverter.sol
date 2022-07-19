@@ -5,7 +5,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 library PriceConverter {
     function getPrice(AggregatorV3Interface priceFeed)
-        internal
+        private
         view
         returns (uint256)
     {
