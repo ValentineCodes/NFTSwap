@@ -3,12 +3,12 @@
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+// import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 import "./interfaces/INFTSwapPool.sol";
 import "./interfaces/INFTSwapFactory.sol";
 
-import "./libraries/PriceConverter.sol";
+// import "./libraries/PriceConverter.sol";
 
 error NFTSwapPool__ZeroAddress();
 
@@ -37,7 +37,7 @@ error NFTSwapPool__InsufficientFee();
 error NFTSwapFactory__FeeTransferFailed();
 
 contract NFTSwapPool is INFTSwapPool {
-    using PriceConverter for uint256;
+    // using PriceConverter for uint256;
 
     uint256 private constant MINIMUM_FEE = 1 * 10**18; // in USD
 
@@ -45,7 +45,7 @@ contract NFTSwapPool is INFTSwapPool {
     address private immutable i_nft1;
 
     INFTSwapFactory private immutable s_factory;
-    AggregatorV3Interface private immutable s_priceFeed;
+    // AggregatorV3Interface private immutable s_priceFeed;
 
     TokenIdPair[] private s_allPairs;
 
@@ -54,13 +54,12 @@ contract NFTSwapPool is INFTSwapPool {
     constructor(
         address factory,
         address nft0,
-        address nft1,
-        address priceFeed
+        address nft1
     ) {
         s_factory = INFTSwapFactory(factory);
         i_nft0 = nft0;
         i_nft1 = nft1;
-        s_priceFeed = AggregatorV3Interface(priceFeed);
+        // s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     function getNFTPair() external view override returns (address, address) {
@@ -140,9 +139,9 @@ contract NFTSwapPool is INFTSwapPool {
             tokenId1
         );
 
-        (bool success, ) = s_factory.getFeeReceiver().call{value: msg.value}(
-            ""
-        );
+        (bool success, ) = payable(s_factory.getFeeReceiver()).call{
+            value: msg.value
+        }("");
 
         if (!success) revert NFTSwapFactory__FeeTransferFailed();
 
@@ -159,11 +158,10 @@ contract NFTSwapPool is INFTSwapPool {
     // TO-DO: Handle price range
     function createExchange(uint256 tokenId0, uint256 tokenId1)
         external
-        payable
         override
     {
-        if (msg.value.toUSD(s_priceFeed) < 1)
-            revert NFTSwapPool__InsufficientFee();
+        // if (msg.value.toUSD(s_priceFeed) < 1)
+        //     revert NFTSwapPool__InsufficientFee();
 
         _createExchange(address(0), tokenId0, tokenId1);
     }
@@ -172,25 +170,21 @@ contract NFTSwapPool is INFTSwapPool {
         address trader,
         uint256 tokenId0,
         uint256 tokenId1
-    ) external payable override {
+    ) external override {
         if (trader == address(0)) revert NFTSwapPool__ZeroAddress();
 
-        if (msg.value.toUSD(s_priceFeed) < 1)
-            revert NFTSwapPool__InsufficientFee();
+        // if (msg.value.toUSD(s_priceFeed) < 1)
+        //     revert NFTSwapPool__InsufficientFee();
 
         _createExchange(trader, tokenId0, tokenId1);
     }
 
-    function trade(uint256 tokenId0, uint256 tokenId1)
-        external
-        payable
-        override
-    {
+    function trade(uint256 tokenId0, uint256 tokenId1) external override {
         Exchange memory exchange = s_exchange[tokenId0][tokenId1];
         (address nft0, address nft1) = (i_nft0, i_nft1);
 
-        if (msg.value.toUSD(s_priceFeed) < 1)
-            revert NFTSwapPool__InsufficientFee();
+        // if (msg.value.toUSD(s_priceFeed) < 1)
+        //     revert NFTSwapPool__InsufficientFee();
 
         if (exchange.owner == address(0))
             revert NFTSwapPool__NonexistentExchange();
@@ -211,11 +205,11 @@ contract NFTSwapPool is INFTSwapPool {
             _getOwnerOf(nft1, tokenId1) != exchange.owner
         ) revert NFTSwapPool__TransferFromFailed();
 
-        (bool success, ) = s_factory.getFeeReceiver().call{value: msg.value}(
-            ""
-        );
+        // (bool success, ) = payable(s_factory.getFeeReceiver()).call{
+        //     value: msg.value
+        // }("");
 
-        if (!success) revert NFTSwapFactory__FeeTransferFailed();
+        // if (!success) revert NFTSwapFactory__FeeTransferFailed();
 
         delete s_exchange[tokenId0][tokenId1];
 

@@ -61,17 +61,15 @@ interface INFTSwapPool {
         view
         returns (Exchange memory);
 
-    function createExchange(uint256 token0Id, uint256 token1Id)
-        external
-        payable;
+    function createExchange(uint256 token0Id, uint256 token1Id) external;
 
     function createExchangeFor(
         address trader,
         uint256 tokenId0,
         uint256 tokenId1
-    ) external payable;
+    ) external;
 
-    function trade(uint256 tokenId0, uint256 tokenId1) external payable;
+    function trade(uint256 tokenId0, uint256 tokenId1) external;
 
     function updateExchangeOwner(
         address newOwner,

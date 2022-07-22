@@ -1,5 +1,4 @@
 import { DeployFunction } from "hardhat-deploy/types";
-import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { deployments, getNamedAccounts, network } from "hardhat";
 
 import {
@@ -8,14 +7,12 @@ import {
 } from "../helper-hardhat-config";
 import { verify } from "../helper-functions";
 
-const deployAfterLife: DeployFunction = async (
-  hre: HardhatRuntimeEnvironment
-) => {
+const deployNFTSwapFactory: DeployFunction = async () => {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
   const chainId: number | undefined = network.config.chainId;
 
-  let afterLifeAddress: string = "";
+  let nftSwapFactoryAddress: string = "";
 
   if (!chainId) return;
 
@@ -27,18 +24,18 @@ const deployAfterLife: DeployFunction = async (
 
   /* Deploy contract */
   try {
-    log("Deploying...");
+    log("Deploying NFTSwapFactory...");
 
-    const afterLife = await deploy("AfterLife", {
+    const nftMock = await deploy("NFTSwapFactory", {
       from: deployer,
       args: [],
       log: true,
       waitConfirmations: waitBlockConfirmations,
     });
 
-    afterLifeAddress = afterLife.address;
+    nftSwapFactoryAddress = nftMock.address;
 
-    log(`Deployed contract to ${afterLife.address} on ${network.name} network`);
+    log(`Deployed contract to ${nftMock.address} on ${network.name} network`);
   } catch (error) {
     log("Failed to deploy contract");
     console.error(error);
@@ -49,12 +46,12 @@ const deployAfterLife: DeployFunction = async (
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(afterLifeAddress, []);
+    await verify(nftSwapFactoryAddress, []);
 
     log("Verification successful");
   }
 };
 
-export default deployAfterLife;
+export default deployNFTSwapFactory;
 
-deployAfterLife.tags = ["all", "afterLife"];
+module.exports.tags = ["all", "nftSwapFactory"];

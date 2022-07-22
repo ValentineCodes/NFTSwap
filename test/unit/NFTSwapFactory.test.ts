@@ -10,25 +10,18 @@ import { NFTSwapFactory, NFTSwapFactory__factory } from "../../typechain";
   : describe("NFTSwapFactory", () => {
       let factory: NFTSwapFactory;
       let accounts: SignerWithAddress[];
-      let deployer: SignerWithAddress;
-      let account_1: SignerWithAddress;
-      let account_2: SignerWithAddress;
+      let owner_0: SignerWithAddress;
+      let owner_1: SignerWithAddress;
+      let owner_2: SignerWithAddress;
 
       /* Deploy contract */
       beforeEach(async () => {
         accounts = await ethers.getSigners();
-        deployer = accounts[0];
-        account_1 = accounts[1];
-        account_2 = accounts[2];
+        owner_0 = accounts[0];
+        owner_1 = accounts[1];
+        owner_2 = accounts[2];
 
-        const NFTSwapFactory: NFTSwapFactory__factory =
-          await ethers.getContractFactory("NFTSwapFactory");
-
-        /* Deploy contract to the network */
-        factory = await NFTSwapFactory.deploy();
-
-        /* Wait for deployment to be completed */
-        await factory.deployed();
+        factory = await ethers.getContract("NFTSwapFactory");
       });
 
       /* Tests */
