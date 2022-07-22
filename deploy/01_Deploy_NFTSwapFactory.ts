@@ -1,5 +1,5 @@
 import { DeployFunction } from "hardhat-deploy/types";
-import { deployments, getNamedAccounts, network } from "hardhat";
+import { deployments, network, ethers } from "hardhat";
 
 import {
   developmentChains,
@@ -9,7 +9,7 @@ import { verify } from "../helper-functions";
 
 const deployNFTSwapFactory: DeployFunction = async () => {
   const { deploy, log } = deployments;
-  const { deployer } = await getNamedAccounts();
+  const accounts = await ethers.getSigners();
   const chainId: number | undefined = network.config.chainId;
 
   let nftSwapFactoryAddress: string = "";
@@ -27,7 +27,7 @@ const deployNFTSwapFactory: DeployFunction = async () => {
     log("Deploying NFTSwapFactory...");
 
     const nftMock = await deploy("NFTSwapFactory", {
-      from: deployer,
+      from: accounts[0].address,
       args: [],
       log: true,
       waitConfirmations: waitBlockConfirmations,

@@ -22,5 +22,5 @@ interface INFTSwapFactory {
 
     function setFeeReceiver(address _feeReceiver) external;
 
-    function setFeeToSetter(address _feeReceiverSetter) external;
+    function setFeeReceiverSetter(address _feeReceiverSetter) external;
 }

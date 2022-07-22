@@ -27,7 +27,7 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
         s_feeReceiverSetter = msg.sender;
     }
 
-    modifier onlyFeeSetter() {
+    modifier onlyFeeReceiverSetter() {
         if (msg.sender != s_feeReceiverSetter)
             revert NFTSwapFactory__NotFeeSetter();
         _;
@@ -97,15 +97,15 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
     function setFeeReceiver(address feeReceiver)
         external
         override
-        onlyFeeSetter
+        onlyFeeReceiverSetter
     {
         s_feeReceiver = feeReceiver;
     }
 
-    function setFeeToSetter(address feeReceiverSetter)
+    function setFeeReceiverSetter(address feeReceiverSetter)
         external
         override
-        onlyFeeSetter
+        onlyFeeReceiverSetter
     {
         s_feeReceiverSetter = feeReceiverSetter;
     }
