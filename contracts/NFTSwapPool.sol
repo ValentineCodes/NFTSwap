@@ -92,26 +92,6 @@ contract NFTSwapPool is INFTSwapPool {
         return IERC721(nft).ownerOf(tokenId);
     }
 
-    function _safeTransferFrom(
-        address nft,
-        address from,
-        address to,
-        uint256 tokenId
-    ) private view {
-        bytes4 selector = bytes4(
-            keccak256(
-                abi.encode(
-                    "safeTransferFrom(address from,address to,uint256 tokenId)"
-                )
-            )
-        );
-        (bool success, bytes memory data) = nft.staticcall(
-            abi.encodeWithSelector(selector, from, to, tokenId)
-        );
-        if (!success && (data.length != 0 || abi.decode(data, (bool))))
-            revert NFTSwapPool__TransferFromFailed();
-    }
-
     function _createExchange(
         address trader,
         uint256 tokenId0,
@@ -124,12 +104,10 @@ contract NFTSwapPool is INFTSwapPool {
         if (trader == msg.sender || trader == nft0 || trader == nft1)
             revert NFTSwapPool__InvalidTrader();
 
-        if (_getOwnerOf(nft0, tokenId0) != msg.sender)
-            revert NFTSwapPool__NotOwner();
         if (_getOwnerOf(nft1, tokenId1) == msg.sender)
             revert NFTSwapPool__AlreadyOwnedToken();
 
-        _safeTransferFrom(nft0, msg.sender, address(this), tokenId0);
+        IERC721(nft0).safeTransferFrom(msg.sender, address(this), tokenId0, "");
 
         s_allPairs.push(TokenIdPair(tokenId0, tokenId1));
         s_exchange[tokenId0][tokenId1] = Exchange(
@@ -139,11 +117,11 @@ contract NFTSwapPool is INFTSwapPool {
             tokenId1
         );
 
-        (bool success, ) = payable(s_factory.getFeeReceiver()).call{
-            value: msg.value
-        }("");
+        // (bool success, ) = payable(s_factory.getFeeReceiver()).call{
+        //     value: msg.value
+        // }("");
 
-        if (!success) revert NFTSwapFactory__FeeTransferFailed();
+        // if (!success) revert NFTSwapFactory__FeeTransferFailed();
 
         emit ExchangeCreated(
             nft0,
@@ -191,14 +169,16 @@ contract NFTSwapPool is INFTSwapPool {
 
         if (msg.sender == exchange.owner) revert NFTSwapPool__InvalidTrader();
 
-        if (_getOwnerOf(nft1, tokenId1) != msg.sender)
-            revert NFTSwapPool__NotOwner();
-
         if (exchange.trader != address(0) && msg.sender != exchange.trader)
             revert NFTSwapPool__InvalidTokenReceiver();
 
-        _safeTransferFrom(nft0, address(this), msg.sender, tokenId0);
-        _safeTransferFrom(nft1, msg.sender, exchange.owner, tokenId1);
+        IERC721(nft0).safeTransferFrom(address(this), msg.sender, tokenId0, "");
+        IERC721(nft1).safeTransferFrom(
+            msg.sender,
+            exchange.owner,
+            tokenId1,
+            ""
+        );
 
         if (
             _getOwnerOf(nft0, tokenId0) != msg.sender &&
@@ -252,6 +232,7 @@ contract NFTSwapPool is INFTSwapPool {
         Exchange memory exchange = s_exchange[tokenId0][tokenId1];
 
         if (msg.sender != exchange.owner) revert NFTSwapPool__NotOwner();
+        if (newTrader == exchange.owner) revert NFTSwapPool__InvalidTrader();
 
         s_exchange[tokenId0][tokenId1] = Exchange(
             exchange.owner,
@@ -282,7 +263,7 @@ contract NFTSwapPool is INFTSwapPool {
         if (to == address(0) || to == nft0 || to == nft1)
             revert NFTSwapPool__InvalidTo();
 
-        _safeTransferFrom(nft0, address(this), to, tokenId0);
+        IERC721(nft0).safeTransferFrom(address(this), to, tokenId0, "");
 
         delete s_exchange[tokenId0][tokenId1];
 

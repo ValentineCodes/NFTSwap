@@ -8,5 +8,7 @@ contract NFTMock is ERC721 {
         for (uint256 index = 0; index < owners.length; index++) {
             _safeMint(owners[index], index);
         }
+
+        _safeMint(owners[0], 4);
     }
 }

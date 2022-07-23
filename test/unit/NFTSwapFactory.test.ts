@@ -8,18 +8,16 @@ import { NFTSwapFactory } from "../../typechain";
 !developmentChains.includes(network.name)
   ? describe.skip
   : describe("NFTSwapFactory", () => {
-      const nftAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+      const nftMockAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
       const zeroAddress = "0x0000000000000000000000000000000000000000";
       let factoryContract: NFTSwapFactory;
       let factory: NFTSwapFactory;
-      let accounts: SignerWithAddress[];
       let deployer: SignerWithAddress;
       let owner_1: SignerWithAddress;
       let owner_2: SignerWithAddress;
 
-      /* Deploy contract */
       beforeEach(async () => {
-        accounts = await ethers.getSigners();
+        const accounts: SignerWithAddress[] = await ethers.getSigners();
         deployer = accounts[0];
         owner_1 = accounts[1];
         owner_2 = accounts[2];
@@ -84,14 +82,14 @@ import { NFTSwapFactory } from "../../typechain";
       });
 
       describe("getFeeReceiver", () => {
-        it("gets fee receiver", async () => {
+        it("retrieves fee receiver", async () => {
           const feeReceiver = await factory.getFeeReceiver();
           expect(feeReceiver).to.equal(owner_1.address);
         });
       });
 
       describe("getFeeReceiverSetter", () => {
-        it("gets fee receiver setter", async () => {
+        it("retrieves fee receiver setter", async () => {
           const feeReceiverSetter = await factory.getFeeReceiverSetter();
           expect(feeReceiverSetter).to.equal(owner_1.address);
         });
@@ -101,26 +99,26 @@ import { NFTSwapFactory } from "../../typechain";
       describe("createPool", () => {
         it("creates pool", async () => {
           const tx: ContractTransaction = await factory.createPool(
-            nftAddress,
-            nftAddress
+            nftMockAddress,
+            nftMockAddress
           );
 
           await tx.wait(1);
 
-          pool = await factory.getPool(nftAddress, nftAddress);
+          pool = await factory.getPool(nftMockAddress, nftMockAddress);
 
           assert(pool !== zeroAddress);
         });
 
         it("reverts if nft address is zero address", async () => {
           await expect(
-            factory.createPool(nftAddress, zeroAddress)
+            factory.createPool(nftMockAddress, zeroAddress)
           ).to.be.revertedWith("NFTSwapFactory__ZeroAddress");
         });
 
         it("reverts if pool already exists", async () => {
           await expect(
-            factory.createPool(nftAddress, nftAddress)
+            factory.createPool(nftMockAddress, nftMockAddress)
           ).to.be.revertedWith("NFTSwapFactory__PoolAlreadyExists");
         });
 
@@ -131,21 +129,21 @@ import { NFTSwapFactory } from "../../typechain";
         });
       });
 
-      describe("gets pool", () => {
-        it("gets pool", async () => {
-          const _pool = await factory.getPool(nftAddress, nftAddress);
+      describe("getPool", () => {
+        it("retrieves pool", async () => {
+          const _pool = await factory.getPool(nftMockAddress, nftMockAddress);
+
+          console.log(_pool);
 
           expect(_pool).to.equal(pool);
         });
       });
 
-      describe("gets all pools", () => {
-        it("gets all pools", async () => {
+      describe("getAllPools", () => {
+        it("retrieves all pools", async () => {
           const allPools = await factory.getAllPools();
 
           assert(allPools);
         });
       });
     });
-
-module.exports.tags = ["all", "factory"];
