@@ -7,53 +7,53 @@ import { NFTSwapFactory } from "../../typechain";
 
 developmentChains.includes(network.name)
   ? describe.skip
-  : describe("NFTSwapFactory", () => {
-      const nftMockAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+  : describe("NFTSwapFactory", async () => {
+      const nftMockAddress = "0x826a91a15dF584F492eD340C2A00c4a3262bc427";
       const zeroAddress = "0x0000000000000000000000000000000000000000";
-      let factoryContract: NFTSwapFactory;
-      let factory: NFTSwapFactory;
+
       let deployer: SignerWithAddress;
       let owner_1: SignerWithAddress;
-      let owner_2: SignerWithAddress;
+      let factory: NFTSwapFactory;
 
       beforeEach(async () => {
         const accounts: SignerWithAddress[] = await ethers.getSigners();
+
         deployer = accounts[0];
         owner_1 = accounts[1];
-        owner_2 = accounts[2];
 
-        factoryContract = await ethers.getContract("NFTSwapFactory");
-        factory = await factoryContract.connect(deployer);
+        factory = await ethers.getContract("NFTSwapFactory", deployer);
       });
 
       /* Tests */
-      describe("contructor", () => {
+      describe("constructor", () => {
         it("initializes the feeReceiver and feeReceiverSetter to the contract deployer", async () => {
           const feeReceiver = await factory.getFeeReceiver();
           const feeReceiverSetter = await factory.getFeeReceiverSetter();
 
-          expect(feeReceiver).to.equal(deployer.address);
-          expect(feeReceiverSetter).to.equal(deployer.address);
+          assert(
+            feeReceiver === owner_1.address &&
+              feeReceiverSetter === owner_1.address
+          );
         });
       });
 
       describe("setFeeReceiver", () => {
         it("reverts if function caller is not the fee receiver setter", async () => {
-          factory = await factoryContract.connect(owner_1.address);
-
           await expect(
             factory.setFeeReceiver(owner_1.address)
           ).to.be.revertedWith("NFTSwapFactory__NotFeeSetter");
         });
 
         it("updates fee receiver", async () => {
-          const tx: ContractTransaction = await factory.setFeeReceiver(
+          const _factory = await factory.connect(owner_1.address);
+
+          const tx: ContractTransaction = await _factory.setFeeReceiver(
             owner_1.address
           );
 
           await tx.wait(1);
 
-          const feeReceiver = await factory.getFeeReceiver();
+          const feeReceiver = await _factory.getFeeReceiver();
 
           expect(feeReceiver).to.equal(owner_1.address);
         });
@@ -61,10 +61,10 @@ developmentChains.includes(network.name)
 
       describe("setFeeReceiverSetter", () => {
         it("reverts if function caller is not the fee receiver setter", async () => {
-          factory = await factoryContract.connect(owner_1.address);
+          const _factory = await factory.connect(owner_1.address);
 
           await expect(
-            factory.setFeeReceiverSetter(owner_1.address)
+            _factory.setFeeReceiverSetter(owner_1.address)
           ).to.be.revertedWith("NFTSwapFactory__NotFeeSetter");
         });
 

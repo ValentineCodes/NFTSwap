@@ -26,16 +26,18 @@ const deployNFTSwapFactory: DeployFunction = async () => {
   try {
     log("Deploying NFTSwapFactory...");
 
-    const nftMock = await deploy("NFTSwapFactory", {
+    const nftSwapFactory = await deploy("NFTSwapFactory", {
       from: accounts[0].address,
       args: [],
       log: true,
       waitConfirmations: waitBlockConfirmations,
     });
 
-    nftSwapFactoryAddress = nftMock.address;
+    nftSwapFactoryAddress = nftSwapFactory.address;
 
-    log(`Deployed contract to ${nftMock.address} on ${network.name} network`);
+    log(
+      `Deployed contract to ${nftSwapFactory.address} on ${network.name} network`
+    );
   } catch (error) {
     log("Failed to deploy contract");
     console.error(error);

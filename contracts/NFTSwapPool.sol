@@ -12,8 +12,6 @@ import "./interfaces/INFTSwapFactory.sol";
 
 error NFTSwapPool__ZeroAddress();
 
-error NFTSwapPool__TokenPairNotFound();
-
 error NFTSwapPool__ExchangeExists();
 
 error NFTSwapPool__NonexistentExchange();
@@ -28,18 +26,19 @@ error NFTSwapPool__InvalidTrader();
 
 error NFTSwapPool__InvalidTo();
 
-error NFTSwapPool__PriceOutOfRange();
-
 error NFTSwapPool__InvalidTokenReceiver();
 
 error NFTSwapPool__InsufficientFee();
 
-error NFTSwapFactory__FeeTransferFailed();
+error NFTSwapPool__FeeTransferFailed();
+
+error NFTSwapPool__Locked();
 
 contract NFTSwapPool is INFTSwapPool {
     // using PriceConverter for uint256;
 
     uint256 private constant MINIMUM_FEE = 1 * 10**18; // in USD
+    uint256 private unlocked = 1;
 
     address private immutable i_nft0;
     address private immutable i_nft1;
@@ -60,6 +59,13 @@ contract NFTSwapPool is INFTSwapPool {
         i_nft0 = nft0;
         i_nft1 = nft1;
         // s_priceFeed = AggregatorV3Interface(priceFeed);
+    }
+
+    modifier lock() {
+        if (unlocked == 0) revert NFTSwapPool__Locked();
+        unlocked = 0;
+        _;
+        unlocked = 1;
     }
 
     function getNFTPair() external view override returns (address, address) {
@@ -120,7 +126,7 @@ contract NFTSwapPool is INFTSwapPool {
         //     value: msg.value
         // }("");
 
-        // if (!success) revert NFTSwapFactory__FeeTransferFailed();
+        // if (!success) revert NFTSwapPool__FeeTransferFailed();
 
         emit ExchangeCreated(
             nft0,
@@ -156,7 +162,7 @@ contract NFTSwapPool is INFTSwapPool {
         _createExchange(trader, tokenId0, tokenId1);
     }
 
-    function trade(uint256 tokenId0, uint256 tokenId1) external override {
+    function trade(uint256 tokenId0, uint256 tokenId1) external override lock {
         Exchange memory exchange = s_exchange[tokenId0][tokenId1];
         (address nft0, address nft1) = (i_nft0, i_nft1);
 
@@ -186,7 +192,7 @@ contract NFTSwapPool is INFTSwapPool {
         //     value: msg.value
         // }("");
 
-        // if (!success) revert NFTSwapFactory__FeeTransferFailed();
+        // if (!success) revert NFTSwapPool__FeeTransferFailed();
 
         delete s_exchange[tokenId0][tokenId1];
 

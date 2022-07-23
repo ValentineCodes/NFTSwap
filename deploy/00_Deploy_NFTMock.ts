@@ -11,6 +11,7 @@ const deployNFTMock: DeployFunction = async () => {
   const { deploy, log } = deployments;
   const accounts = await ethers.getSigners();
   const chainId: number | undefined = network.config.chainId;
+  const args = [accounts[0].address, accounts[1].address, accounts[2].address];
 
   let nftMockAddress: string = "";
 
@@ -28,7 +29,7 @@ const deployNFTMock: DeployFunction = async () => {
 
     const nftMock = await deploy("NFTMock", {
       from: accounts[0].address,
-      args: [[accounts[0].address, accounts[1].address, accounts[2].address]],
+      args: [args],
       log: true,
       waitConfirmations: waitBlockConfirmations,
     });
@@ -46,7 +47,7 @@ const deployNFTMock: DeployFunction = async () => {
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(nftMockAddress, []);
+    await verify(nftMockAddress, [args]);
 
     log("Verification successful");
   }

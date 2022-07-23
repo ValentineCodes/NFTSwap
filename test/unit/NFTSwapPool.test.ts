@@ -8,7 +8,7 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
 !developmentChains.includes(network.name)
   ? describe.skip
   : describe("NFTSwapPool", () => {
-      const poolAddress: string = "0xf222997Af63d2D515006960DA81f56f6317380E1";
+      const poolAddress: string = "0xa608a7894fd629B7EfF2cc21Ecc40652Dc21389A";
       const nftMockAddress: string =
         "0x5FbDB2315678afecb367f032d93F642f64180aa3";
       const zeroAddress = "0x0000000000000000000000000000000000000000";
@@ -26,7 +26,8 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
         owner_2 = accounts[2];
 
         pool = new ethers.Contract(poolAddress, NFTSwapPoolABI, deployer);
-        nftMock = new ethers.Contract(nftMockAddress, NFTMockABI, deployer);
+        // nftMock = new ethers.Contract(nftMockAddress, NFTMockABI, deployer);
+        nftMock = await ethers.getContract("NFTMock");
       });
 
       describe("getNFTPair", () => {
@@ -121,7 +122,7 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
           );
         });
 
-        it("swaps nfts", async () => {
+        it("transfers exchange token to trader", async () => {
           const _pool = new ethers.Contract(
             poolAddress,
             NFTSwapPoolABI,
@@ -142,13 +143,15 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
           const tx1: ContractTransaction = await _pool.trade(4, 2);
           await tx1.wait(1);
 
-          const ownerOfTokenId0: string = await _nftMock.ownerOf(4);
-          const ownerOfTokenId1: string = await _nftMock.ownerOf(2);
+          const owner: string = await _nftMock.ownerOf(4);
 
-          assert(
-            ownerOfTokenId0 === owner_2.address &&
-              ownerOfTokenId1 === deployer.address
-          );
+          expect(owner).to.equal(owner_2.address);
+        });
+
+        it("transfers trader token to exchange owner", async () => {
+          const owner: string = await nftMock.ownerOf(2);
+
+          expect(owner).to.equal(deployer.address);
         });
 
         it("deletes exchange", async () => {
@@ -240,7 +243,7 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
 
         let nftPair;
 
-        it("reverts if nft receiver is pool nft1", async () => {
+        it("reverts if nft receiver is nft1 in pool", async () => {
           nftPair = await pool.getNFTPair();
 
           await expect(
@@ -248,7 +251,7 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
           ).to.be.revertedWith("NFTSwapPool__InvalidTo");
         });
 
-        it("reverts if nft receiver is pool nft2", async () => {
+        it("reverts if nft receiver is nft2 in pool", async () => {
           await expect(
             pool.cancelExchange(2, 1, nftPair[1])
           ).to.be.revertedWith("NFTSwapPool__InvalidTo");

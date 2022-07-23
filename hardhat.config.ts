@@ -37,7 +37,9 @@ const POLYGON_MAINNET_RPC_URL =
   process.env.POLYGON_MAINNET_RPC_URL ||
   "https://polygon-mainnet.alchemyapi.io/v2/your-api-key";
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x";
+const PRIVATE_KEY_0 = process.env.PRIVATE_KEY_0 || "0x";
+const PRIVATE_KEY_1 = process.env.PRIVATE_KEY_1 || "0x";
+const PRIVATE_KEY_2 = process.env.PRIVATE_KEY_2 || "0x";
 // optional
 const MNEMONIC = process.env.MNEMONIC || "your mnemonic";
 
@@ -65,7 +67,7 @@ const config: HardhatUserConfig = {
     },
     kovan: {
       url: KOVAN_RPC_URL,
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      accounts: PRIVATE_KEY_0 !== undefined ? [PRIVATE_KEY_0] : [],
       //accounts: {
       //     mnemonic: MNEMONIC,
       // },
@@ -74,7 +76,10 @@ const config: HardhatUserConfig = {
     },
     rinkeby: {
       url: RINKEBY_RPC_URL,
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      accounts:
+        PRIVATE_KEY_0 !== undefined
+          ? [PRIVATE_KEY_0, PRIVATE_KEY_1, PRIVATE_KEY_2]
+          : [],
       //   accounts: {
       //     mnemonic: MNEMONIC,
       //   },
@@ -83,7 +88,7 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: MAINNET_RPC_URL,
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      accounts: PRIVATE_KEY_0 !== undefined ? [PRIVATE_KEY_0] : [],
       //   accounts: {
       //     mnemonic: MNEMONIC,
       //   },
@@ -92,7 +97,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       url: POLYGON_MAINNET_RPC_URL,
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      accounts: PRIVATE_KEY_0 !== undefined ? [PRIVATE_KEY_0] : [],
       saveDeployments: true,
       chainId: 137,
     },
@@ -115,7 +120,7 @@ const config: HardhatUserConfig = {
   },
   contractSizer: {
     runOnCompile: false,
-    only: ["AfterLife"],
+    only: ["NFTSwapFactory", "NFTSwapPool"],
   },
   namedAccounts: {
     deployer: {

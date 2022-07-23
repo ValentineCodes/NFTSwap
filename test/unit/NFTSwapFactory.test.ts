@@ -14,26 +14,26 @@ import { NFTSwapFactory } from "../../typechain";
       let factory: NFTSwapFactory;
       let deployer: SignerWithAddress;
       let owner_1: SignerWithAddress;
-      let owner_2: SignerWithAddress;
 
       beforeEach(async () => {
         const accounts: SignerWithAddress[] = await ethers.getSigners();
         deployer = accounts[0];
         owner_1 = accounts[1];
-        owner_2 = accounts[2];
 
         factoryContract = await ethers.getContract("NFTSwapFactory");
         factory = await factoryContract.connect(deployer);
       });
 
       /* Tests */
-      describe("contructor", () => {
+      describe("constructor", () => {
         it("initializes the feeReceiver and feeReceiverSetter to the contract deployer", async () => {
           const feeReceiver = await factory.getFeeReceiver();
           const feeReceiverSetter = await factory.getFeeReceiverSetter();
 
-          expect(feeReceiver).to.equal(deployer.address);
-          expect(feeReceiverSetter).to.equal(deployer.address);
+          assert(
+            feeReceiver === deployer.address &&
+              feeReceiverSetter === deployer.address
+          );
         });
       });
 

@@ -8,9 +8,9 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
 developmentChains.includes(network.name)
   ? describe.skip
   : describe("NFTSwapPool", () => {
-      const poolAddress: string = "0x9B4752cf63Eca67dfe2CB8df0F8Af774F72a163A";
+      const poolAddress: string = "0x7728416E110a402f54BeB412979AdA9f3A9c040C";
       const nftMockAddress: string =
-        "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        "0x826a91a15dF584F492eD340C2A00c4a3262bc427";
       const zeroAddress = "0x0000000000000000000000000000000000000000";
       let pool;
       let nftMock;
@@ -121,7 +121,7 @@ developmentChains.includes(network.name)
           );
         });
 
-        it("swaps nfts", async () => {
+        it("transfers exchange token to trader", async () => {
           const _pool = new ethers.Contract(
             poolAddress,
             NFTSwapPoolABI,
@@ -142,13 +142,15 @@ developmentChains.includes(network.name)
           const tx1: ContractTransaction = await _pool.trade(4, 2);
           await tx1.wait(1);
 
-          const ownerOfTokenId0: string = await _nftMock.ownerOf(4);
-          const ownerOfTokenId1: string = await _nftMock.ownerOf(2);
+          const owner: string = await _nftMock.ownerOf(4);
 
-          assert(
-            ownerOfTokenId0 === owner_2.address &&
-              ownerOfTokenId1 === deployer.address
-          );
+          expect(owner).to.equal(owner_2.address);
+        });
+
+        it("transfers trader token to exchange owner", async () => {
+          const owner: string = await nftMock.ownerOf(2);
+
+          expect(owner).to.equal(deployer.address);
         });
 
         it("deletes exchange", async () => {
@@ -220,11 +222,6 @@ developmentChains.includes(network.name)
       });
 
       describe("cancelExchange", () => {
-        // reverts if function caller is not exchange owner
-        // reverts if nft receiver is the zero address, or any of the nfts
-        // transfers nft to receiver
-        // deletes exchange
-
         it("reverts if function caller is not the exchange owner", async () => {
           const _pool = await pool.connect(owner_1.address);
           await expect(
