@@ -71,7 +71,6 @@ contract NFTSwapFactory is INFTSwapFactory, NoDelegateCall {
         (address nft0, address nft1) = _sortNFTs(nftA, nftB);
 
         if (nft0 == address(0)) revert NFTSwapFactory__ZeroAddress();
-
         if (s_pool[nft0][nft1] != address(0))
             revert NFTSwapFactory__PoolAlreadyExists();
 

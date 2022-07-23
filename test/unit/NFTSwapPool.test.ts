@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { assert, expect } from "chai";
-import { BigNumber, ContractReceipt, ContractTransaction } from "ethers";
+import { ContractTransaction } from "ethers";
 import { network, ethers } from "hardhat";
 import { developmentChains } from "../../helper-hardhat-config";
 import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
@@ -8,7 +8,7 @@ import { NFTMockABI, NFTSwapPoolABI } from "../../constants";
 !developmentChains.includes(network.name)
   ? describe.skip
   : describe("NFTSwapPool", () => {
-      const poolAddress: string = "0x9B4752cf63Eca67dfe2CB8df0F8Af774F72a163A";
+      const poolAddress: string = "0xf222997Af63d2D515006960DA81f56f6317380E1";
       const nftMockAddress: string =
         "0x5FbDB2315678afecb367f032d93F642f64180aa3";
       const zeroAddress = "0x0000000000000000000000000000000000000000";

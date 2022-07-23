@@ -103,7 +103,6 @@ contract NFTSwapPool is INFTSwapPool {
         if (exchange.owner != address(0)) revert NFTSwapPool__ExchangeExists();
         if (trader == msg.sender || trader == nft0 || trader == nft1)
             revert NFTSwapPool__InvalidTrader();
-
         if (_getOwnerOf(nft1, tokenId1) == msg.sender)
             revert NFTSwapPool__AlreadyOwnedToken();
 
@@ -166,9 +165,7 @@ contract NFTSwapPool is INFTSwapPool {
 
         if (exchange.owner == address(0))
             revert NFTSwapPool__NonexistentExchange();
-
         if (msg.sender == exchange.owner) revert NFTSwapPool__InvalidTrader();
-
         if (exchange.trader != address(0) && msg.sender != exchange.trader)
             revert NFTSwapPool__InvalidTokenReceiver();
 
@@ -214,7 +211,7 @@ contract NFTSwapPool is INFTSwapPool {
             exchange.tokenId1
         );
 
-        emit ExchangeUpdated(
+        emit ExchangeOwnerUpdated(
             i_nft0,
             i_nft1,
             newOwner,
@@ -241,7 +238,7 @@ contract NFTSwapPool is INFTSwapPool {
             exchange.tokenId1
         );
 
-        emit ExchangeUpdated(
+        emit ExchangeTraderUpdated(
             i_nft0,
             i_nft1,
             exchange.owner,
