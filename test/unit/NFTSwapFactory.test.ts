@@ -1,8 +1,8 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { assert, expect } from "chai";
-import { BigNumber, ContractTransaction } from "ethers";
+import { ContractTransaction } from "ethers";
 import { network, ethers } from "hardhat";
-import { developmentChains, networkConfig } from "../../helper-hardhat-config";
+import { developmentChains } from "../../helper-hardhat-config";
 import { NFTSwapFactory } from "../../typechain";
 
 !developmentChains.includes(network.name)
@@ -50,7 +50,6 @@ import { NFTSwapFactory } from "../../typechain";
           const tx: ContractTransaction = await factory.setFeeReceiver(
             owner_1.address
           );
-
           await tx.wait(1);
 
           const feeReceiver = await factory.getFeeReceiver();
@@ -72,7 +71,6 @@ import { NFTSwapFactory } from "../../typechain";
           const tx: ContractTransaction = await factory.setFeeReceiverSetter(
             owner_1.address
           );
-
           await tx.wait(1);
 
           const feeReceiver = await factory.getFeeReceiverSetter();
@@ -102,7 +100,6 @@ import { NFTSwapFactory } from "../../typechain";
             nftMockAddress,
             nftMockAddress
           );
-
           await tx.wait(1);
 
           pool = await factory.getPool(nftMockAddress, nftMockAddress);
@@ -133,7 +130,7 @@ import { NFTSwapFactory } from "../../typechain";
         it("retrieves pool", async () => {
           const _pool = await factory.getPool(nftMockAddress, nftMockAddress);
 
-          console.log(_pool);
+          console.log("pool address => ", _pool);
 
           expect(_pool).to.equal(pool);
         });
