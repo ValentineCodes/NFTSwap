@@ -2,7 +2,11 @@
 
 ### Swap your NFTs!
 
-NFTSwap is a Decentralized Exchange for all your NFTs on the Ethereum network. NFT owners may create exchanges specifying which NFT they would like to trade and the NFT they would like to trade it for. Traders with the requested NFT may trade and a swap will be made.
+NFTSwap is a Decentralized Exchange for all your NFTs on the Ethereum network.
+
+### How it works
+
+NFT owners may create exchanges specifying which NFT they would like to trade and the NFT they would like to trade it for. They may also specify the trader they would like to trade with. Traders with the requested NFT may trade and a swap will be made.
 
 This consists of two main contracts:
 
