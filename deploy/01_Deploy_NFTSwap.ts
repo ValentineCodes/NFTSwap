@@ -7,12 +7,12 @@ import {
 } from "../helper-hardhat-config";
 import { verify } from "../helper-functions";
 
-const deployNFTSwapFactory: DeployFunction = async () => {
+const deployNFTSwap: DeployFunction = async () => {
   const { deploy, log } = deployments;
   const accounts = await ethers.getSigners();
   const chainId: number | undefined = network.config.chainId;
 
-  let nftSwapFactoryAddress: string = "";
+  let nftSwapAddress: string = "";
 
   if (!chainId) return;
 
@@ -24,20 +24,18 @@ const deployNFTSwapFactory: DeployFunction = async () => {
 
   /* Deploy contract */
   try {
-    log("Deploying NFTSwapFactory...");
+    log("Deploying NFTSwap...");
 
-    const nftSwapFactory = await deploy("NFTSwapFactory", {
+    const nftSwap = await deploy("NFTSwap", {
       from: accounts[0].address,
       args: [],
       log: true,
       waitConfirmations: waitBlockConfirmations,
     });
 
-    nftSwapFactoryAddress = nftSwapFactory.address;
+    nftSwapAddress = nftSwap.address;
 
-    log(
-      `Deployed contract to ${nftSwapFactory.address} on ${network.name} network`
-    );
+    log(`Deployed contract to ${nftSwap.address} on ${network.name} network`);
   } catch (error) {
     log("Failed to deploy contract");
     console.error(error);
@@ -48,12 +46,12 @@ const deployNFTSwapFactory: DeployFunction = async () => {
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(nftSwapFactoryAddress, []);
+    await verify(nftSwapAddress, []);
 
     log("Verification successful");
   }
 };
 
-export default deployNFTSwapFactory;
+export default deployNFTSwap;
 
-module.exports.tags = ["all", "nftSwapFactory"];
+module.exports.tags = ["all", "nftSwap"];

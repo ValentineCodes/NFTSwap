@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.7;
 
-/// @title The NFT swap pool interface
-/// @notice Creates and updates exchanges for trades
-interface INFTSwapPool {
+/// @title The NFTSwap interface
+/// @notice Manage exchanges and trades
+interface INFTSwap {
     /// @notice Emitted when an exchanged is created
     /// @param nft0 The address of the first NFT
     /// @param nft1 The address of the second NFT
@@ -87,76 +87,93 @@ interface INFTSwapPool {
         uint256 tokenId1
     );
 
-    /// @notice Data model for token id pairs
-    /// @dev tokenId0 and tokenId1 must be in order
-    /// @param tokenId0 The token id of {nft0} to be traded by exchange owner
-    /// @param tokenId1 The token id of {nft1} to be received by exchange owner
-    struct TokenIdPair {
-        uint256 tokenId0;
-        uint256 tokenId1;
-    }
-
     /// @notice Data model for exchanges
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param owner Address of exchange owner
     /// @param trader Address of trader. Can be set to zero address to allow all traders
+    /// @param nft0 Address of the NFT to be exchanged
+    /// @param nft1 Address of the requested NFT
     /// @param tokenId0 The token id of {nft0} to be traded by exchange owner
     /// @param tokenId1 The token id of {nft1} to be received by exchange owner
     struct Exchange {
         address owner;
         address trader;
+        address nft0;
+        address nft1;
         uint256 tokenId0;
         uint256 tokenId1;
     }
 
-    /// @notice Retreives the NFT pair
-    /// @return Array of NFT addresses
-    function getNFTPair() external view returns (address, address);
-
     /// @notice Retrieves all token id pairs
-    /// @return Array of token id pairs
-    function getAllPairs() external view returns (TokenIdPair[] memory);
+    /// @return Array of exchanges
+    function getAllExchanges() external view returns (Exchange[] memory);
 
     /// @notice Retreives exchange data of token id pairs
     /// @dev tokenId0 and tokenId1 must be in order
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     /// @return Exchange data (see Exchange struct for data model)
-    function getExchange(uint256 tokenId0, uint256 tokenId1)
-        external
-        view
-        returns (Exchange memory);
+    function getExchange(
+        address nft0,
+        address nft1,
+        uint256 tokenId0,
+        uint256 tokenId1
+    ) external view returns (Exchange memory);
 
     /// @notice Creates an exchange with tokenId0 for tokenId1 that can be traded by anyone
     /// @dev tokenId0 and tokenId1 must be in order
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
-    function createExchange(uint256 tokenId0, uint256 tokenId1) external;
+    function createExchange(
+        address nft0,
+        address nft1,
+        uint256 tokenId0,
+        uint256 tokenId1
+    ) external;
 
     /// @notice Creates an exchange with tokenId0 for tokenId1 that can be traded by a specific trader
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param trader Address of trader of the token requested
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     function createExchangeFor(
         address trader,
+        address nft0,
+        address nft1,
         uint256 tokenId0,
         uint256 tokenId1
     ) external;
 
     /// @notice Trades tokenId1 for tokenId0
     /// @dev tokenId0 and tokenId1 must be in order
+    /// @param nft0 Address of the NFT to be received by trader
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be received by trader
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
-    function trade(uint256 tokenId0, uint256 tokenId1) external;
+    function trade(
+        address nft0,
+        address nft1,
+        uint256 tokenId0,
+        uint256 tokenId1
+    ) external;
 
     /// @notice Updates exchange owner
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param newOwner Address of the new owner
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     function updateExchangeOwner(
         address newOwner,
+        address nft0,
+        address nft1,
         uint256 tokenId0,
         uint256 tokenId1
     ) external;
@@ -164,22 +181,30 @@ interface INFTSwapPool {
     /// @notice Updates exchange trader
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param newTrader Address of the new trader. Can be set to the zero address to allow all traders to trade
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     function updateExchangeTrader(
         address newTrader,
+        address nft0,
+        address nft1,
         uint256 tokenId0,
         uint256 tokenId1
     ) external;
 
     /// @notice Cancels exchange and sends tokenId0 to {to}
     /// @dev tokenId0 and tokenId1 must be in order
+    /// @param nft0 Address of the NFT to be traded by the exchange owner
+    /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0}
     /// @param tokenId1 Token id of {nft1}
-    /// @param to Address of the receiver of tokenId0
+    /// @param recipient Address of the receiver of tokenId0
     function cancelExchange(
+        address nft0,
+        address nft1,
         uint256 tokenId0,
         uint256 tokenId1,
-        address to
+        address recipient
     ) external;
 }

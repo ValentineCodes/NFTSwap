@@ -2,16 +2,11 @@
 
 ### Swap your NFTs!
 
-NFTSwap is a Decentralized Exchange for all your NFTs on the Ethereum network.
+[NFTSwap](https://rinkeby.etherscan.io/address/0x8a669489DEcc93F9941d645481C0894f5b1b2a6A) is a Decentralized Exchange for all your NFTs on the Ethereum network. Swap your NFTs with any trader or a specific trader depending on how the exchange is created.
 
 ### How it works
 
 NFT owners may create exchanges specifying which NFT they would like to trade and the NFT they would like to trade it for. They may also specify the trader they would like to trade with. Traders with the requested NFT may trade and a swap will be made.
-
-This consists of two main contracts:
-
-1. [NFTSwapFactory](https://rinkeby.etherscan.io/address/0x9Fbd6139b0B2EEF1a1EC7561Fd90c914CD5da842): This creates swap pools and manages fees.
-2. NFTSwapPool: This creates exchanges and handles trades
 
 # Local Development
 
@@ -23,14 +18,8 @@ yarn
 
 #### Run test scripts
 
-```3shell
-yarn hardhat test
-```
-
-#### Run local node:
-
 ```shell
-yarn hardhat node
+yarn test
 ```
 
 #### Deploy to several networks
@@ -38,8 +27,6 @@ yarn hardhat node
 `Note: Signer, RPC URL and ETHERSCAN API KEY must be provided as environment variables`
 
 ```shell
-yarn hardhat deploy --network localhost
-
 yarn hardhat deploy --network rinkeby
 
 yarn hardhat deploy --network mainnet

@@ -5,7 +5,7 @@
   "author": "Valentine Orga",
   "license": "MIT",
   "scripts": {
-    "test": "yarn hardhat test --network localhost",
+    "test": "yarn hardhat test",
     "test-staging": "yarn hardhat test --network rinkeby",
     "lint": "yarn solhint 'contracts/*.sol'",
     "lint:fix": "yarn solhint 'contracts/**/*.sol' --fix",
