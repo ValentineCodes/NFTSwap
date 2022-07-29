@@ -172,14 +172,7 @@ contract NFTSwap is INFTSwap {
 
         if (msg.sender != exchange.owner) revert NFTSwap__NotOwner();
 
-        s_exchange[nft0][tokenId0][nft1][tokenId1] = Exchange(
-            newOwner,
-            exchange.trader,
-            nft0,
-            nft1,
-            exchange.tokenId0,
-            exchange.tokenId1
-        );
+        s_exchange[nft0][tokenId0][nft1][tokenId1].owner = newOwner;
 
         emit ExchangeOwnerUpdated(
             nft0,
@@ -203,14 +196,7 @@ contract NFTSwap is INFTSwap {
         if (msg.sender != exchange.owner) revert NFTSwap__NotOwner();
         if (newTrader == exchange.owner) revert NFTSwap__InvalidTrader();
 
-        s_exchange[nft0][tokenId0][nft1][tokenId1] = Exchange(
-            exchange.owner,
-            newTrader,
-            nft0,
-            nft1,
-            exchange.tokenId0,
-            exchange.tokenId1
-        );
+        s_exchange[nft0][tokenId0][nft1][tokenId1].trader = newTrader;
 
         emit ExchangeTraderUpdated(
             nft0,
