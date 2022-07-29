@@ -46,9 +46,13 @@ const deployNFTSwap: DeployFunction = async () => {
     !developmentChains.includes(network.name) &&
     process.env.ETHERSCAN_API_KEY
   ) {
-    await verify(nftSwapAddress, []);
+    try {
+      await verify(nftSwapAddress, []);
 
-    log("Verification successful");
+      log("Verification successful");
+    } catch (error) {
+      console.log(error);
+    }
   }
 };
 

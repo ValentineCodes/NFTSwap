@@ -2,7 +2,7 @@
 
 ### Swap your NFTs!
 
-[NFTSwap](https://rinkeby.etherscan.io/address/0x8a669489DEcc93F9941d645481C0894f5b1b2a6A) is a Decentralized Exchange for all your NFTs on the Ethereum network. Swap your NFTs with any trader or a specific trader depending on how the exchange is created.
+[NFTSwap](https://rinkeby.etherscan.io/address/0x528CE0aD8394018aa31FfEc6e9c63fDeC770905c) is a Decentralized Exchange for all your NFTs on the Ethereum network. Swap your NFTs with any trader or a specific trader depending on how the exchange is created.
 
 ### How it works
 
