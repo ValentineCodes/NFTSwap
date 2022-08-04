@@ -10,6 +10,7 @@ interface INFTSwap {
     /// @param nft1 The address of the second NFT
     /// @param owner The address of the exchange owner. Owner initialized as the exchange creator
     /// @param trader The address of the exchange trader. Trader is the zero address if emitted from createExchange()
+    /// @param recipient The address of the exchange recipient
     /// @param tokenId0 The token id of {nft0} to be exchanged by the owner
     /// @param tokenId1 The token id of {nft1} to be received from trades
     event ExchangeCreated(
@@ -17,6 +18,7 @@ interface INFTSwap {
         address nft1,
         address owner,
         address trader,
+        address recipient,
         uint256 tokenId0,
         uint256 tokenId1
     );
@@ -26,6 +28,7 @@ interface INFTSwap {
     /// @param nft1 The address of the second NFT
     /// @param newOwner The address of the new exchange owner
     /// @param trader The address of the exchange trader
+    /// @param recipient The address of the exchange recipient
     /// @param tokenId0 The token id of {nft0} to be exchanged by the owner
     /// @param tokenId1 The token id of {nft1} to be received from trades
     event ExchangeOwnerUpdated(
@@ -33,6 +36,7 @@ interface INFTSwap {
         address nft1,
         address newOwner,
         address trader,
+        address recipient,
         uint256 tokenId0,
         uint256 tokenId1
     );
@@ -42,6 +46,7 @@ interface INFTSwap {
     /// @param nft1 The address of the second NFT
     /// @param owner The address of the exchange owner
     /// @param newTrader The address of the new exchange trader
+    /// @param recipient The address of the exchange recipient
     /// @param tokenId0 The token id of {nft0} to be exchanged by the owner
     /// @param tokenId1 The token id of {nft1} to be received from trades
     event ExchangeTraderUpdated(
@@ -49,6 +54,7 @@ interface INFTSwap {
         address nft1,
         address owner,
         address newTrader,
+        address recipient,
         uint256 tokenId0,
         uint256 tokenId1
     );
@@ -58,7 +64,7 @@ interface INFTSwap {
     /// @param nft1 The address of the second NFT
     /// @param owner The address of the exchange owner
     /// @param trader The address of the exchange trader
-    /// @param receiver The NFT receiver
+    /// @param recipient The NFT recipient
     /// @param tokenId0 The token id of {nft0} to be exchanged by the owner
     /// @param tokenId1 The token id of {nft1} to be received from trades
     event ExchangeCancelled(
@@ -66,7 +72,7 @@ interface INFTSwap {
         address nft1,
         address owner,
         address trader,
-        address receiver,
+        address recipient,
         uint256 tokenId0,
         uint256 tokenId1
     );
@@ -76,6 +82,7 @@ interface INFTSwap {
     /// @param nft1 The address of the second NFT
     /// @param owner The address of the exchange owner
     /// @param trader The address of the trader
+    /// @param recipient The address of the exchange recipient
     /// @param tokenId0 The token id of {nft0} received
     /// @param tokenId1 The token id of {nft1} traded
     event Trade(
@@ -83,6 +90,7 @@ interface INFTSwap {
         address nft1,
         address owner,
         address trader,
+        address recipient,
         uint256 tokenId0,
         uint256 tokenId1
     );
@@ -91,6 +99,7 @@ interface INFTSwap {
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param owner Address of exchange owner
     /// @param trader Address of trader. Can be set to zero address to allow all traders
+    /// @param recipient Address of recipient.
     /// @param nft0 Address of the NFT to be exchanged
     /// @param nft1 Address of the requested NFT
     /// @param tokenId0 The token id of {nft0} to be traded by exchange owner
@@ -98,6 +107,7 @@ interface INFTSwap {
     struct Exchange {
         address owner;
         address trader;
+        address recipient;
         address nft0;
         address nft1;
         uint256 tokenId0;
@@ -122,13 +132,23 @@ interface INFTSwap {
         uint256 tokenId1
     ) external view returns (Exchange memory);
 
+    /// @notice Retrieves all exchanges of {owner}
+    /// @param owner Address of the owner
+    /// @return Array of exchanges
+    function getOwnerExchanges(address owner)
+        external
+        view
+        returns (Exchange[] memory);
+
     /// @notice Creates an exchange with tokenId0 for tokenId1 that can be traded by anyone
     /// @dev tokenId0 and tokenId1 must be in order
+    /// @param recipient Address of recipient
     /// @param nft0 Address of the NFT to be traded by the exchange owner
     /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     function createExchange(
+        address recipient,
         address nft0,
         address nft1,
         uint256 tokenId0,
@@ -138,12 +158,14 @@ interface INFTSwap {
     /// @notice Creates an exchange with tokenId0 for tokenId1 that can be traded by a specific trader
     /// @dev tokenId0 and tokenId1 must be in order
     /// @param trader Address of trader of the token requested
+    /// @param recipient Address of recipient
     /// @param nft0 Address of the NFT to be traded by the exchange owner
     /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
     function createExchangeFor(
         address trader,
+        address recipient,
         address nft0,
         address nft1,
         uint256 tokenId0,
@@ -165,13 +187,13 @@ interface INFTSwap {
 
     /// @notice Updates exchange owner
     /// @dev tokenId0 and tokenId1 must be in order
-    /// @param newOwner Address of the new owner
+    /// @param newRecipient Address of the new recipient
     /// @param nft0 Address of the NFT to be traded by the exchange owner
     /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0} to be traded by the exchange owner
     /// @param tokenId1 Token id of {nft1} requested by the exchange owner
-    function updateExchangeOwner(
-        address newOwner,
+    function updateExchangeRecipient(
+        address newRecipient,
         address nft0,
         address nft1,
         uint256 tokenId0,
@@ -199,12 +221,10 @@ interface INFTSwap {
     /// @param nft1 Address of the NFT requested by the exchange owner
     /// @param tokenId0 Token id of {nft0}
     /// @param tokenId1 Token id of {nft1}
-    /// @param recipient Address of the receiver of tokenId0
     function cancelExchange(
         address nft0,
         address nft1,
         uint256 tokenId0,
-        uint256 tokenId1,
-        address recipient
+        uint256 tokenId1
     ) external;
 }

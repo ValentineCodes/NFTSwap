@@ -54,6 +54,16 @@ import {
         });
       });
 
+      describe("getOwnerExchanges", () => {
+        it("retreives all exchanges of owner", async () => {
+          const ownerExchanges = await nftSwap.getOwnerExchanges(
+            deployer.address
+          );
+
+          assert(ownerExchanges);
+        });
+      });
+
       describe("createExchange", () => {
         beforeEach(async () => {
           const tx: ContractTransaction = await nftMock.approve(
@@ -63,6 +73,7 @@ import {
           await tx.wait(1);
 
           const tx1: ContractTransaction = await nftSwap.createExchange(
+            deployer.address,
             nftMock.address,
             nftMock.address,
             0,
@@ -73,7 +84,13 @@ import {
 
         it("reverts if function caller already owns the token to be received", async () => {
           await expect(
-            nftSwap.createExchange(nftMock.address, nftMock.address, 0, 4)
+            nftSwap.createExchange(
+              deployer.address,
+              nftMock.address,
+              nftMock.address,
+              0,
+              4
+            )
           ).to.be.revertedWith("NFTSwap__AlreadyOwnedToken");
         });
 
@@ -96,7 +113,13 @@ import {
 
         it("reverts if exchange exists", async () => {
           await expect(
-            nftSwap.createExchange(nftMock.address, nftMock.address, 0, 1)
+            nftSwap.createExchange(
+              deployer.address,
+              nftMock.address,
+              nftMock.address,
+              0,
+              1
+            )
           ).to.be.revertedWith("NFTSwap__ExchangeExists");
         });
       });
@@ -106,12 +129,32 @@ import {
           await expect(
             nftSwap.createExchangeFor(
               zeroAddress,
+              deployer.address,
               nftMock.address,
               nftMock.address,
               0,
               1
             )
           ).to.be.revertedWith("NFTSwap__ZeroAddress");
+        });
+
+        it("reverts if recipient is trader", async () => {
+          const tx: ContractTransaction = await nftMock.approve(
+            nftSwap.address,
+            0
+          );
+          await tx.wait(1);
+
+          await expect(
+            nftSwap.createExchangeFor(
+              owner_1.address,
+              owner_1.address,
+              nftMock.address,
+              nftMock.address,
+              0,
+              1
+            )
+          ).to.be.revertedWith("NFTSwap__RecipientCannotBeTrader");
         });
 
         it("sets the trader for the exchange", async () => {
@@ -123,6 +166,7 @@ import {
 
           const tx1: ContractTransaction = await nftSwap.createExchangeFor(
             owner_2.address,
+            deployer.address,
             nftMock.address,
             nftMock.address,
             4,
@@ -150,6 +194,7 @@ import {
           await tx.wait(1);
 
           const tx1: ContractTransaction = await nftSwap.createExchange(
+            deployer.address,
             nftMock.address,
             nftMock.address,
             0,
@@ -165,6 +210,7 @@ import {
 
           const tx3: ContractTransaction = await nftSwap.createExchangeFor(
             owner_2.address,
+            deployer.address,
             nftMock.address,
             nftMock.address,
             4,
@@ -184,12 +230,12 @@ import {
           ).to.be.revertedWith("NFTSwap__InvalidTrader");
         });
 
-        it("reverts if exchange is for specific trader and function caller is not the trader", async () => {
+        it("reverts function caller is not the trader when trader is set", async () => {
           nftSwap = nftSwap.connect(owner_1);
 
           await expect(
             nftSwap.trade(nftMock.address, nftMock.address, 4, 2)
-          ).to.be.revertedWith("NFTSwap__InvalidTokenReceiver");
+          ).to.be.revertedWith("NFTSwap__NotExchangeTrader");
         });
 
         const trade = async () => {
@@ -234,7 +280,7 @@ import {
         });
       });
 
-      describe("updateExchangeOwner", () => {
+      describe("updateExchangeRecipient", () => {
         beforeEach(async () => {
           const tx: ContractTransaction = await nftMock.approve(
             nftSwap.address,
@@ -243,6 +289,7 @@ import {
           await tx.wait(1);
 
           const tx1: ContractTransaction = await nftSwap.createExchange(
+            deployer.address,
             nftMock.address,
             nftMock.address,
             0,
@@ -250,9 +297,9 @@ import {
           );
           await tx1.wait(1);
         });
-        it("reverts if new owner is zero address", async () => {
+        it("reverts if new recipient is zero address", async () => {
           await expect(
-            nftSwap.updateExchangeOwner(
+            nftSwap.updateExchangeRecipient(
               zeroAddress,
               nftMock.address,
               nftMock.address,
@@ -266,7 +313,7 @@ import {
           nftSwap = nftSwap.connect(owner_1);
 
           await expect(
-            nftSwap.updateExchangeOwner(
+            nftSwap.updateExchangeRecipient(
               owner_1.address,
               nftMock.address,
               nftMock.address,
@@ -276,8 +323,8 @@ import {
           ).to.be.revertedWith("NFTSwap__NotOwner");
         });
 
-        it("updates exchange owner", async () => {
-          const tx: ContractTransaction = await nftSwap.updateExchangeOwner(
+        it("updates exchange recipient", async () => {
+          const tx: ContractTransaction = await nftSwap.updateExchangeRecipient(
             owner_1.address,
             nftMock.address,
             nftMock.address,
@@ -292,7 +339,7 @@ import {
             0,
             1
           );
-          expect(exchange.owner).to.equal(owner_1.address);
+          expect(exchange.recipient).to.equal(owner_1.address);
         });
       });
 
@@ -305,6 +352,7 @@ import {
           await tx.wait(1);
 
           const tx1: ContractTransaction = await nftSwap.createExchange(
+            deployer.address,
             nftMock.address,
             nftMock.address,
             0,
@@ -368,6 +416,7 @@ import {
           await tx.wait(1);
 
           const tx1: ContractTransaction = await nftSwap.createExchange(
+            deployer.address,
             nftMock.address,
             nftMock.address,
             0,
@@ -379,50 +428,8 @@ import {
         it("reverts if function caller is not the exchange owner", async () => {
           nftSwap = nftSwap.connect(owner_1);
           await expect(
-            nftSwap.cancelExchange(
-              nftMock.address,
-              nftMock.address,
-              0,
-              1,
-              deployer.address
-            )
+            nftSwap.cancelExchange(nftMock.address, nftMock.address, 0, 1)
           ).to.be.revertedWith("NFTSwap__NotOwner");
-        });
-
-        it("reverts if nft recipient is the zero address", async () => {
-          await expect(
-            nftSwap.cancelExchange(
-              nftMock.address,
-              nftMock.address,
-              0,
-              1,
-              zeroAddress
-            )
-          ).to.be.revertedWith("NFTSwap__InvalidRecipient");
-        });
-
-        it("reverts if nft recipient is nft0", async () => {
-          await expect(
-            nftSwap.cancelExchange(
-              nftMock.address,
-              nftMock.address,
-              0,
-              1,
-              nftMock.address
-            )
-          ).to.be.revertedWith("NFTSwap__InvalidRecipient");
-        });
-
-        it("reverts if nft recipient is nft1", async () => {
-          await expect(
-            nftSwap.cancelExchange(
-              nftMock.address,
-              nftMock.address,
-              0,
-              1,
-              nftMock.address
-            )
-          ).to.be.revertedWith("NFTSwap__InvalidRecipient");
         });
 
         it("transfers nft to receiver", async () => {
@@ -430,8 +437,7 @@ import {
             nftMock.address,
             nftMock.address,
             0,
-            1,
-            deployer.address
+            1
           );
           await tx.wait(1);
 
@@ -445,8 +451,7 @@ import {
             nftMock.address,
             nftMock.address,
             0,
-            1,
-            deployer.address
+            1
           );
           await tx.wait(1);
 
